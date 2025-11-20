@@ -15,6 +15,7 @@ background-color: #161616;
   border: 2px solid rgb(255, 251, 246);
  padding: 2px;
  text-align: center;
+border-radius: 3px;
 max-width: 52px;
 max-height: 22px;
 justify-content: bottom;
