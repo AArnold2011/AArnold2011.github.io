@@ -9,6 +9,7 @@ body{
     color: var(--text);
     background: var(--background)
 }
+
 .IndexButtonHome{
 background-color: var(--secondary);
   color: var(--text);
@@ -23,6 +24,7 @@ position: fixed;
 left: 49px;
 bottom: 5px;
 }
+
 .IndexButtonBack{
 background-color: var(--secondary);
   color: var(--text);
@@ -37,6 +39,7 @@ position: fixed;
 left: 2px;
 bottom: 5px;
 }
+
 .IndexButtonNext{
 background-color: var(--secondary);
   color: var(--text);
@@ -51,3 +54,20 @@ position: fixed;
 left: 102px;
 bottom: 5px;
 }
+
+a:link {
+  color: var(--text);
+}
+
+a:visited {
+  color: var(--text);
+}
+
+a:hover {
+  color: var(--accent);
+}
+
+a:active {
+  color: var(--secondary);
+}
+ 
