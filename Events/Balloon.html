@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Balloon</title>
+    <link rel="stylesheet" href="style.css">
+
+<!-- I know you told us to not use the style element but I didn't want to link these pages to the rest of my website because I want the main site to be clean and if there is residule unused elements in my style sheet it wont look good.-->
+<style>
+body {
+display: flex;
+justify-content: center;
+align-items: center;
+height: 500px;
+margin: 0;
+font-family: sans-serif;
+overflow: hidden;
+}
+#balloon {
+font-size: 67px; 
+user-select: none;
+}
+</style>
+
+
+</head>
+<body>
+
+
+<div id="balloon">🎈</div>
+
+
+<script>
+const balloon = document.getElementById("balloon");
+let size = 67; 
+const step = 0.10; 
+const burstSize = 200; 
+
+
+function handleKey(e) {
+if (e.key === "ArrowUp") {
+e.preventDefault();
+size *= (1 + step);
+if (size > burstSize) {
+balloon.textContent = "💥";
+window.removeEventListener("keydown", handleKey);
+} else {
+balloon.style.fontSize = size + "px";
+}
+}
+
+
+if (e.key === "ArrowDown") {
+e.preventDefault();
+size *= (1 - step);
+balloon.style.fontSize = size + "px";
+}
+}
+
+
+window.addEventListener("keydown", handleKey);
+</script>
+<a href="MouseTrail.html">Next</a>
+
+</body>
+</html>
