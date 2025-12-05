@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+        <style> 
+        .spinner { 
+            height: 150px; 
+            border-radius: 75px; 
+            background-color: lightgreen; 
+            transform-origin: center;
+            display: inline-block;
+        } 
+       
+        </style> 
+
+</head>
+<body>
+   <Div class="spinner" id="spinner">
+    <p>Brat</p>
+   </Div>
+   
+    <button onclick="startSpin()"> 
+        Rotate by 90 degrees 
+    </button> 
+    
+    <script type="text/javascript"> 
+         const spinner = document.getElementById('spinner');
+    let rotation = 0;
+    let startTime = null; // will be set when the button is pressed
+    let animationId = null;
+    let rndspdmod = 1;
+
+    // startSpin initializes timing and starts the rAF loop
+    function startSpin() {
+        startTime = null; // initialize on first rAF callback
+        rndspdmod = 0.5 + Math.random(); // use Math.random()
+        if (!animationId) animationId = requestAnimationFrame(animateSpin);
+    }
+
+    // animation callback receives a high-resolution timestamp
+    function animateSpin(timestamp) {
+        if (startTime === null) startTime = timestamp;
+        const lifetime = (timestamp - startTime) / 1000; // seconds since button pressed
+
+        // speed modifier: inverse of lifetime so it slows over time
+        const spdmod = 1 / (lifetime + 0.001)+1; // add epsilon to avoid div by zero
+
+        rotation += (spdmod + 10) * rndspdmod;
+        spinner.style.transform = `rotate(${rotation}deg)`;
+
+        animationId = requestAnimationFrame(animateSpin);
+    }
+    </script> 
+</body>
+</html>
