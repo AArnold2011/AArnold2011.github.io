@@ -78,14 +78,12 @@
             <div>
                 <label>Payout: <span id="selectedPayout">-</span></label>
             </div>
-            <div>
-                <button id="placeBetBtn" onclick="placeBet()">Place Bet</button>
-            </div>
+        
             <p id="betMessage"></p>
         </div>
         <div id="spinnerContainer">
             <Div class="spinner" id="spinner">
-                <img src="Images/363802D7-E46A-4E5E-9B11-C96A1D1F40E1_4_5005_c.jpeg" alt="roulette wheel">
+                <img src="Images/363802D7-E46A-4E5E-9B11-C96A1D1F40E1_4_5005_c-removebg-preview.png" alt="roulette wheel">
             </Div>
             <div style="margin-top: 15px;">
                 <button onclick="startSpin()"> 
@@ -280,6 +278,27 @@
         betMessage.textContent = `Bet placed: ${amount} on '${choice}' — Payout: ${payoutInfo.label}`;
     }
 
+    // Place a bet when the user clicks a box. This refunds any existing (unresolved)
+    // bet stake, validates the requested amount, subtracts the new stake immediately,
+    // and sets `currentBet` so the spin will resolve it.
+    function placeBetOnClick(choice, displayLabel) {
+        const amount = Number(betAmountInput.value) || 0;
+        if (!choice) { betMessage.textContent = 'No choice selected'; return; }
+        if (!Number.isFinite(amount) || amount <= 0) { betMessage.textContent = 'Enter a valid bet amount'; return; }
+        // If there's an outstanding bet, refund its stake before placing the new bet
+        if (currentBet && currentBet.amount) {
+            playerPoints += currentBet.amount;
+            currentBet = null;
+        }
+        if (amount > playerPoints) { betMessage.textContent = 'Not enough points'; updatePointsDisplay(); return; }
+        // subtract stake immediately
+        playerPoints -= amount;
+        updatePointsDisplay();
+        currentBet = { amount: amount, choice: choice };
+        const payoutInfo = getPayoutForChoice(choice);
+        betMessage.textContent = `Bet placed: ${amount} on '${displayLabel}' — Payout: ${payoutInfo.label}`;
+    }
+
     function resolveBet(resultNumber) {
         if (!currentBet) return;
         const stake = currentBet.amount;
@@ -436,7 +455,9 @@
                         const pi = getPayoutForChoice(choice);
                         selectedPayoutSpan.textContent = pi.label;
                     }
+                    // Show selection and place the bet immediately using current amount
                     betMessage.textContent = "Selected: '" + displayLabel + "'";
+                    placeBetOnClick(choice, displayLabel);
                     console.log('Clicked div classes:', rawClasses, 'canonical=', canonical, 'choice=', choice, 'label=', displayLabel);
                 });
     });
