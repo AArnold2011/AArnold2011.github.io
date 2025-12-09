@@ -33,10 +33,11 @@
                 padding: 1px;
                 word-break: break-all;
                 background-color: inherit;
+                cursor: pointer;
             }
                 .roulette-box.selected {
-                    outline: 2px solid #222;
-                    box-shadow: 0 0 4px rgba(0,0,0,0.25) inset;
+                    outline: 3px solid #222;
+                    box-shadow: 0 0 6px rgba(0,0,0,0.4) inset;
                 }
         body {
             text-align: center;
@@ -62,6 +63,12 @@
             font-weight: bold;
             min-height: 30px;
         }
+        #activeBets {
+            font-size: 12px;
+            margin-top: 10px;
+            max-width: 250px;
+            text-align: left;
+        }
         </style> 
 
 </head>
@@ -73,13 +80,12 @@
                 <label>Amount: <input id="betAmount" type="number" min="1" value="1"></label>
             </div>
             <div>
-                <label>Selected: <span id="selectedChoice">None</span></label>
-            </div>
-            <div>
-                <label>Payout: <span id="selectedPayout">-</span></label>
+                <label>Total Bet: <span id="totalBet">0</span></label>
             </div>
         
             <p id="betMessage"></p>
+            <div id="activeBets"></div>
+            <button onclick="clearAllBets()" style="margin-top: 10px; font-size: 11px;">Clear All Bets</button>
         </div>
         <div id="spinnerContainer">
             <Div class="spinner" id="spinner">
@@ -174,6 +180,25 @@
     let rndspdmod = 1;
 
     function startSpin() {
+        // Validate that there are bets
+        if (activeBets.length === 0) {
+            betMessage.textContent = 'Place at least one bet first';
+            return;
+        }
+        
+        // Calculate total bet amount
+        const totalAmount = activeBets.reduce((sum, bet) => sum + bet.amount, 0);
+        
+        if (totalAmount > playerPoints) {
+            betMessage.textContent = 'Not enough points for all bets';
+            return;
+        }
+        
+        // Deduct points now
+        playerPoints -= totalAmount;
+        updatePointsDisplay();
+        betMessage.textContent = `Spinning... Total bet: ${totalAmount}`;
+        
         startTime = null; 
         rndspdmod = 0.5 + Math.random(); 
         if (!animationId) animationId = requestAnimationFrame(animateSpin);
@@ -216,29 +241,52 @@
     function displayWheelResult() {
         const resultNumber = getWheelNumber(rotation);
         betMessage.textContent = "Wheel Result: " + resultNumber;
-        // resolve any active bet
-        resolveBet(resultNumber);
+        // resolve all active bets
+        resolveAllBets(resultNumber);
         return resultNumber;
     }
    
-    // Hover tracking, points and betting helpers
-    let hoveredDivClass = null;
+    // Multiple bets system
     const betMessage = document.getElementById('betMessage');
     const pointsDisplay = document.getElementById('pointsDisplay');
     const pointsValue = document.getElementById('pointsValue');
     const betAmountInput = document.getElementById('betAmount');
-    const betChoiceInput = document.getElementById('betChoice'); // kept for backward compatibility (may be null)
-    const selectedChoiceSpan = document.getElementById('selectedChoice');
-    const selectedPayoutSpan = document.getElementById('selectedPayout');
-    let selectedChoice = null; // will hold normalized internal choice string
+    const totalBetSpan = document.getElementById('totalBet');
+    const activeBetsDiv = document.getElementById('activeBets');
 
     // simple points system
     let playerPoints = 100;
-    let currentBet = null; // { amount: number, choice: string }
+    let activeBets = []; // array of { amount: number, choice: string, displayLabel: string, element: HTMLElement }
 
     function updatePointsDisplay() {
-        // update numeric span so markup remains stable
         pointsValue.textContent = playerPoints;
+    }
+
+    function updateTotalBet() {
+        const total = activeBets.reduce((sum, bet) => sum + bet.amount, 0);
+        totalBetSpan.textContent = total;
+    }
+
+    function updateActiveBetsList() {
+        if (activeBets.length === 0) {
+            activeBetsDiv.innerHTML = '<div style="color: #999;">No active bets</div>';
+        } else {
+            activeBetsDiv.innerHTML = '<strong>Active Bets:</strong><br>' + 
+                activeBets.map(bet => `• ${bet.displayLabel}: ${bet.amount}`).join('<br>');
+        }
+    }
+
+    function clearAllBets() {
+        // Remove selected class from all boxes
+        activeBets.forEach(bet => {
+            if (bet.element) {
+                bet.element.classList.remove('selected');
+            }
+        });
+        activeBets = [];
+        updateTotalBet();
+        updateActiveBetsList();
+        betMessage.textContent = 'All bets cleared';
     }
 
     // return an object with multiplier and label for display given an internal choice string
@@ -256,113 +304,123 @@
         return { multiplier: 0, label: '-' };
     }
 
-    function setHoveredDivClass(className) { hoveredDivClass = className; }
-    function getHoveredDivClass() { return hoveredDivClass; }
-
     // helper: red numbers on a standard wheel
     const redNumbers = new Set([1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36]);
 
-    function placeBet() {
-        const amount = Number(betAmountInput.value) || 0;
-        // read choice from selected box first, then fall back to legacy input if present
-        const choice = (selectedChoice || (betChoiceInput ? betChoiceInput.value : '') || '').trim();
-        if (!choice) { betMessage.textContent = 'Select a bet choice by clicking a box'; return; }
-        if (!Number.isFinite(amount) || amount <= 0) { betMessage.textContent = 'Enter a valid bet amount'; return; }
-        if (amount > playerPoints) { betMessage.textContent = 'Not enough points'; return; }
-        // subtract stake immediately
-        playerPoints -= amount;
-        updatePointsDisplay();
-        currentBet = { amount: amount, choice: choice };
-        // show expected payout when bet placed
-        const payoutInfo = getPayoutForChoice(choice);
-        betMessage.textContent = `Bet placed: ${amount} on '${choice}' — Payout: ${payoutInfo.label}`;
-    }
-
-    // Place a bet when the user clicks a box. This refunds any existing (unresolved)
-    // bet stake, validates the requested amount, subtracts the new stake immediately,
-    // and sets `currentBet` so the spin will resolve it.
-    function placeBetOnClick(choice, displayLabel) {
+    // Toggle a bet when clicking a box
+    function toggleBet(choice, displayLabel, element) {
         const amount = Number(betAmountInput.value) || 0;
         if (!choice) { betMessage.textContent = 'No choice selected'; return; }
         if (!Number.isFinite(amount) || amount <= 0) { betMessage.textContent = 'Enter a valid bet amount'; return; }
-        // If there's an outstanding bet, refund its stake before placing the new bet
-        if (currentBet && currentBet.amount) {
-            playerPoints += currentBet.amount;
-            currentBet = null;
+        
+        // Check if this bet already exists
+        const existingBetIndex = activeBets.findIndex(bet => bet.choice === choice);
+        
+        if (existingBetIndex !== -1) {
+            // Remove the bet (toggle off)
+            activeBets.splice(existingBetIndex, 1);
+            element.classList.remove('selected');
+            betMessage.textContent = `Removed bet on '${displayLabel}'`;
+        } else {
+            // Add the bet (toggle on)
+            activeBets.push({ 
+                amount: amount, 
+                choice: choice, 
+                displayLabel: displayLabel,
+                element: element 
+            });
+            element.classList.add('selected');
+            const payoutInfo = getPayoutForChoice(choice);
+            betMessage.textContent = `Added bet: ${amount} on '${displayLabel}' — Payout: ${payoutInfo.label}`;
         }
-        if (amount > playerPoints) { betMessage.textContent = 'Not enough points'; updatePointsDisplay(); return; }
-        // subtract stake immediately
-        playerPoints -= amount;
-        updatePointsDisplay();
-        currentBet = { amount: amount, choice: choice };
-        const payoutInfo = getPayoutForChoice(choice);
-        betMessage.textContent = `Bet placed: ${amount} on '${displayLabel}' — Payout: ${payoutInfo.label}`;
+        
+        updateTotalBet();
+        updateActiveBetsList();
     }
 
-    function resolveBet(resultNumber) {
-        if (!currentBet) return;
-        const stake = currentBet.amount;
-        const choiceRaw = currentBet.choice.toLowerCase();
-        // French roulette rule: la partage -> even-money bets lose only half when 0 appears
-        const evenMoneySet = new Set(['red','black','even','odd','low','high']);
-        if (resultNumber === 0 && evenMoneySet.has(choiceRaw)) {
-            // return half the stake to the player
-            const returned = stake / 2;
-            playerPoints += returned;
-            betMessage.textContent = `Result: 0. La partage applies — half your stake (${returned}) returned. Points: ${playerPoints}`;
-            // clear current bet
-            currentBet = null;
-            updatePointsDisplay();
-            return;
-        }
-        let win = false;
-        let profitMultiplier = 0; // profit relative to stake (e.g., 1 for even-money, 35 for straight)
+    function resolveAllBets(resultNumber) {
+        if (activeBets.length === 0) return;
+        
+        let totalWon = 0;
+        let totalLost = 0;
+        const results = [];
+        
+        activeBets.forEach(bet => {
+            const stake = bet.amount;
+            const choiceRaw = bet.choice.toLowerCase();
+            
+            // French roulette rule: la partage -> even-money bets lose only half when 0 appears
+            const evenMoneySet = new Set(['red','black','even','odd','low','high']);
+            if (resultNumber === 0 && evenMoneySet.has(choiceRaw)) {
+                const returned = stake / 2;
+                playerPoints += returned;
+                results.push(`${bet.displayLabel}: Lost half (${returned} returned)`);
+                totalLost += stake / 2;
+                return;
+            }
+            
+            let win = false;
+            let profitMultiplier = 0;
 
-        // numeric straight bet
-        if (/^\d+$/.test(choiceRaw)) {
-            const n = parseInt(choiceRaw, 10);
-            if (n === resultNumber) { win = true; profitMultiplier = 35; }
-        } else if (choiceRaw === 'red') {
-            if (redNumbers.has(resultNumber)) { win = true; profitMultiplier = 1; }
-        } else if (choiceRaw === 'black') {
-            if (resultNumber !== 0 && !redNumbers.has(resultNumber)) { win = true; profitMultiplier = 1; }
-        } else if (choiceRaw === 'even') {
-            if (resultNumber !== 0 && resultNumber % 2 === 0) { win = true; profitMultiplier = 1; }
-        } else if (choiceRaw === 'odd') {
-            if (resultNumber % 2 === 1) { win = true; profitMultiplier = 1; }
-        } else if (choiceRaw === 'low' || choiceRaw === '1-18') {
-            if (resultNumber >= 1 && resultNumber <= 18) { win = true; profitMultiplier = 1; }
-        } else if (choiceRaw === 'high' || choiceRaw === '19-36') {
-            if (resultNumber >= 19 && resultNumber <= 36) { win = true; profitMultiplier = 1; }
-        } else if (choiceRaw === 'first' || choiceRaw === 'first dozen' || choiceRaw === 'dozen1') {
-            if (resultNumber >=1 && resultNumber <=12) { win = true; profitMultiplier = 2; }
-        } else if (choiceRaw === 'second' || choiceRaw === 'second dozen' || choiceRaw === 'dozen2') {
-            if (resultNumber >=13 && resultNumber <=24) { win = true; profitMultiplier = 2; }
-        } else if (choiceRaw === 'third' || choiceRaw === 'third dozen' || choiceRaw === 'dozen3') {
-            if (resultNumber >=25 && resultNumber <=36) { win = true; profitMultiplier = 2; }
-        } else if (choiceRaw === 'columnone' || choiceRaw === 'column 1' || choiceRaw === 'col1') {
-            if (resultNumber !== 0 && (resultNumber % 3) === 1) { win = true; profitMultiplier = 2; }
-        } else if (choiceRaw === 'columntwo' || choiceRaw === 'column 2' || choiceRaw === 'col2') {
-            if (resultNumber !== 0 && (resultNumber % 3) === 2) { win = true; profitMultiplier = 2; }
-        } else if (choiceRaw === 'columnthree' || choiceRaw === 'column 3' || choiceRaw === 'col3') {
-            if (resultNumber !== 0 && (resultNumber % 3) === 0) { win = true; profitMultiplier = 2; }
-        }
+            // numeric straight bet
+            if (/^\d+$/.test(choiceRaw)) {
+                const n = parseInt(choiceRaw, 10);
+                if (n === resultNumber) { win = true; profitMultiplier = 35; }
+            } else if (choiceRaw === 'red') {
+                if (redNumbers.has(resultNumber)) { win = true; profitMultiplier = 1; }
+            } else if (choiceRaw === 'black') {
+                if (resultNumber !== 0 && !redNumbers.has(resultNumber)) { win = true; profitMultiplier = 1; }
+            } else if (choiceRaw === 'even') {
+                if (resultNumber !== 0 && resultNumber % 2 === 0) { win = true; profitMultiplier = 1; }
+            } else if (choiceRaw === 'odd') {
+                if (resultNumber % 2 === 1) { win = true; profitMultiplier = 1; }
+            } else if (choiceRaw === 'low' || choiceRaw === '1-18') {
+                if (resultNumber >= 1 && resultNumber <= 18) { win = true; profitMultiplier = 1; }
+            } else if (choiceRaw === 'high' || choiceRaw === '19-36') {
+                if (resultNumber >= 19 && resultNumber <= 36) { win = true; profitMultiplier = 1; }
+            } else if (choiceRaw === 'first' || choiceRaw === 'first dozen' || choiceRaw === 'dozen1') {
+                if (resultNumber >=1 && resultNumber <=12) { win = true; profitMultiplier = 2; }
+            } else if (choiceRaw === 'second' || choiceRaw === 'second dozen' || choiceRaw === 'dozen2') {
+                if (resultNumber >=13 && resultNumber <=24) { win = true; profitMultiplier = 2; }
+            } else if (choiceRaw === 'third' || choiceRaw === 'third dozen' || choiceRaw === 'dozen3') {
+                if (resultNumber >=25 && resultNumber <=36) { win = true; profitMultiplier = 2; }
+            } else if (choiceRaw === 'columnone' || choiceRaw === 'column 1' || choiceRaw === 'col1') {
+                if (resultNumber !== 0 && (resultNumber % 3) === 1) { win = true; profitMultiplier = 2; }
+            } else if (choiceRaw === 'columntwo' || choiceRaw === 'column 2' || choiceRaw === 'col2') {
+                if (resultNumber !== 0 && (resultNumber % 3) === 2) { win = true; profitMultiplier = 2; }
+            } else if (choiceRaw === 'columnthree' || choiceRaw === 'column 3' || choiceRaw === 'col3') {
+                if (resultNumber !== 0 && (resultNumber % 3) === 0) { win = true; profitMultiplier = 2; }
+            }
 
-        if (win) {
-            // return stake + profit
-            const payout = stake * (1 + profitMultiplier);
-            playerPoints += payout;
-            betMessage.textContent = `Result: ${resultNumber}. You won ${stake * profitMultiplier} (payout ${payout}).`;
+            if (win) {
+                const payout = stake * (1 + profitMultiplier);
+                playerPoints += payout;
+                totalWon += stake * profitMultiplier;
+                results.push(`${bet.displayLabel}: Won ${stake * profitMultiplier}`);
+            } else {
+                totalLost += stake;
+                results.push(`${bet.displayLabel}: Lost ${stake}`);
+            }
+        });
+
+        // Show summary
+        const netResult = totalWon - totalLost;
+        if (netResult > 0) {
+            betMessage.textContent = `Result: ${resultNumber}. Net win: +${netResult}!`;
+        } else if (netResult < 0) {
+            betMessage.textContent = `Result: ${resultNumber}. Net loss: ${netResult}`;
         } else {
-            betMessage.textContent = `Result: ${resultNumber}. You lost ${stake}.`;
+            betMessage.textContent = `Result: ${resultNumber}. Break even`;
         }
-
-        // clear current bet
-        currentBet = null;
+        
+        // Keep the bets active (don't clear them)
         updatePointsDisplay();
+        updateActiveBetsList();
     }
 
     updatePointsDisplay();
+    updateTotalBet();
+    updateActiveBetsList();
 
     const allDivs = document.querySelectorAll('div[class="0"], div[class="1"], div[class="2"], div[class="3"], div[class="4"], div[class="5"], div[class="6"], div[class="7"], div[class="8"], div[class="9"], div[class="10"], div[class="11"], div[class="12"], div[class="13"], div[class="14"], div[class="15"], div[class="16"], div[class="17"], div[class="18"], div[class="19"], div[class="20"], div[class="21"], div[class="22"], div[class="23"], div[class="24"], div[class="25"], div[class="26"], div[class="27"], div[class="28"], div[class="29"], div[class="30"], div[class="31"], div[class="32"], div[class="33"], div[class="34"], div[class="35"], div[class="36"], div.Red, div.Black, div.Even, div.Odd, div.Low, div.High, div.first, div.second, div.third, div.columnone, div.columntwo, div.columnthree');
     allDivs.forEach(div => {
@@ -396,70 +454,47 @@
                 div.style.backgroundColor = specialColors[cls];
             }
 
-            // update hover tracking
-            div.addEventListener('mouseenter', function() {
-                setHoveredDivClass(this.className);
-                console.log('Mouse entered div; hoveredDivClass =', getHoveredDivClass());
+            // handle click to toggle bet
+            div.addEventListener('click', function() {
+                // build a candidate list from classList, ignoring helper classes
+                const rawClasses = Array.from(this.classList || []);
+                const filtered = rawClasses.filter(c => c !== 'roulette-box' && c !== 'selected');
+
+                // find a canonical class: prefer numeric slot, then known keys
+                let canonical = '';
+                for (const c of filtered) { if (/^\d+$/.test(c)) { canonical = c; break; } }
+                if (!canonical) {
+                    const known = ['columnone','columntwo','columnthree','first','second','third','red','black','even','odd','low','high'];
+                    for (const c of filtered) { if (known.includes(c.toLowerCase())) { canonical = c.toLowerCase(); break; } }
+                }
+                if (!canonical) canonical = filtered[0] || '';
+
+                // map to friendly label and internal key
+                function friendlyLabelFromClass(c) {
+                    if (!c) return '';
+                    if (/^\d+$/.test(c)) return c;
+                    const map = {
+                        'columnone': 'Column 1', 'columntwo': 'Column 2', 'columnthree': 'Column 3',
+                        'first': '1st dozen (1-12)', 'second': '2nd dozen (13-24)', 'third': '3rd dozen (25-36)',
+                        'red': 'Red', 'black': 'Black', 'even': 'Even', 'odd': 'Odd',
+                        'low': '1-18', 'high': '19-36'
+                    };
+                    const key = c.toLowerCase();
+                    return map[key] || map[c] || c.replace(/[-_]/g,' ').replace(/(^|\s)\S/g, s => s.toUpperCase());
+                }
+
+                function internalChoiceFromClass(c) {
+                    if (!c) return '';
+                    if (/^\d+$/.test(c)) return c;
+                    return c.toLowerCase();
+                }
+
+                const displayLabel = friendlyLabelFromClass(canonical) || (this.textContent || '').trim();
+                const choice = internalChoiceFromClass(canonical);
+
+                // Toggle the bet
+                toggleBet(choice, displayLabel, this);
             });
-
-            div.addEventListener('mouseleave', function() {
-                setHoveredDivClass(null);
-                console.log('Mouse left div; hoveredDivClass cleared');
-            });
-
-                // handle click to set bet choice from the clicked box
-                div.addEventListener('click', function() {
-                    // build a candidate list from classList, ignoring helper classes
-                    const rawClasses = Array.from(this.classList || []);
-                    const filtered = rawClasses.filter(c => c !== 'roulette-box' && c !== 'selected');
-
-                    // find a canonical class: prefer numeric slot, then known keys
-                    let canonical = '';
-                    for (const c of filtered) { if (/^\d+$/.test(c)) { canonical = c; break; } }
-                    if (!canonical) {
-                        const known = ['columnone','columntwo','columnthree','first','second','third','red','black','even','odd','low','high'];
-                        for (const c of filtered) { if (known.includes(c.toLowerCase())) { canonical = c.toLowerCase(); break; } }
-                    }
-                    if (!canonical) canonical = filtered[0] || '';
-
-                    // map to friendly label and internal key
-                    function friendlyLabelFromClass(c) {
-                        if (!c) return '';
-                        if (/^\d+$/.test(c)) return c;
-                        const map = {
-                            'columnone': 'Column 1', 'columntwo': 'Column 2', 'columnthree': 'Column 3',
-                            'first': '1st dozen (1-12)', 'second': '2nd dozen (13-24)', 'third': '3rd dozen (25-36)',
-                            'red': 'Red', 'black': 'Black', 'even': 'Even', 'odd': 'Odd',
-                            'low': '1-18', 'high': '19-36'
-                        };
-                        const key = c.toLowerCase();
-                        return map[key] || map[c] || c.replace(/[-_]/g,' ').replace(/(^|\s)\S/g, s => s.toUpperCase());
-                    }
-
-                    function internalChoiceFromClass(c) {
-                        if (!c) return '';
-                        if (/^\d+$/.test(c)) return c;
-                        return c.toLowerCase();
-                    }
-
-                    const displayLabel = friendlyLabelFromClass(canonical) || (this.textContent || '').trim();
-                    const choice = internalChoiceFromClass(canonical);
-
-                    selectedChoice = choice;
-                    if (selectedChoiceSpan) selectedChoiceSpan.textContent = displayLabel;
-                    if (betChoiceInput) betChoiceInput.value = choice;
-                    const prev = document.querySelector('.roulette-box.selected');
-                    if (prev) prev.classList.remove('selected');
-                    this.classList.add('selected');
-                    if (selectedPayoutSpan) {
-                        const pi = getPayoutForChoice(choice);
-                        selectedPayoutSpan.textContent = pi.label;
-                    }
-                    // Show selection and place the bet immediately using current amount
-                    betMessage.textContent = "Selected: '" + displayLabel + "'";
-                    placeBetOnClick(choice, displayLabel);
-                    console.log('Clicked div classes:', rawClasses, 'canonical=', canonical, 'choice=', choice, 'label=', displayLabel);
-                });
     });
 
     
