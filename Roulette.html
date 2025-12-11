@@ -4,10 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Roulette</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
         <style> 
         .spinner { 
-            height: 203px;
-            width: 203px; 
+            height: 202px;
+            width: 202px; 
             border-radius: 100%; 
             background-color: transparent; 
             transform-origin: center;
@@ -20,15 +24,15 @@
             margin-top: 20px; 
         }
             .roulette-box {
-                width: 35px;
-                height: 30px;
+                width: 40px;
+                height: 35px;
                 display: flex;
                 align-items: center;
                 justify-content: center;
                 margin: 2px;
                 box-sizing: border-box;
-                border: 1px solid rgba(0,0,0,0.2);
-                font-size: 8px;
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                font-size: 11px;
                 font-family: Arial, Helvetica, sans-serif;
                 padding: 1px;
                 word-break: break-all;
@@ -36,8 +40,8 @@
                 cursor: pointer;
             }
                 .roulette-box.selected {
-                    outline: 3px solid #222;
-                    box-shadow: 0 0 6px rgba(0,0,0,0.4) inset;
+                    outline: 3px solid #cccccc;
+                    box-shadow: 0 0 6px rgba(255, 255, 255, 0.4) inset;
                 }
         body {
             text-align: center;
@@ -118,7 +122,7 @@
     </div>
 
     <!-- Column 2: 0, 2, 5, 8, 11, 14, 17, 20, 23, 26, 29, 32, 35, columntwo -->
-    <div style="display: inline-block; vertical-align: top; margin-left: 5px; margin-top: -39px;">
+    <div style="display: inline-block; vertical-align: top; margin-left: 2px; margin-top: -36px;">
         <div class="0">0</div>
         <div class="2">2</div>
         <div class="5">5</div>
@@ -136,7 +140,7 @@
     </div>
 
     <!-- Column 3: 3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36, columnthree -->
-    <div style="display: inline-block; vertical-align: top; margin-left: 5px;">
+    <div style="display: inline-block; vertical-align: top; margin-left: 2px;">
         <div class="3">3</div>
         <div class="6">6</div>
         <div class="9">9</div>
@@ -153,13 +157,13 @@
     </div>
 
     <!-- Special blocks grid 3x3 -->
-    <div style="margin-top: 20px;">
-        <div style="display: inline-block; margin-right: 10px;">
+    <div style="margin-top: 16px;">
+        <div style="display: inline-block; margin-right: 6px;">
             <div class="Red">Red</div>
             <div class="Black">Black</div>
             <div class="Even">Even</div>
         </div>
-        <div style="display: inline-block; margin-right: 10px;">
+        <div style="display: inline-block; margin-right: 6px;">
             <div class="Odd">Odd</div>
             <div class="Low">Low</div>
             <div class="High">High</div>
@@ -170,6 +174,17 @@
             <div class="third">Third Dozen</div>
         </div>
     </div>
+    </div>
+    
+     </Div>
+    <div class="IndexButtonBack">
+        <a href="#" onclick="history.go(-1); return false;">Back</a>
+    </div>
+    <div class="IndexButtonHome">
+        <a href="index.html">Home</a>
+    </div>
+    <div class="IndexButtonNext">
+        <a href="#" onclick="history.go(1); return false;">Next</a>
     </div>
     
     <script type="text/javascript"> 
