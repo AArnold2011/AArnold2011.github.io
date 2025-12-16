@@ -319,9 +319,6 @@
         return { multiplier: 0, label: '-' };
     }
 
-    // helper: red numbers on a standard wheel
-    const redNumbers = new Set([1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36]);
-
     // Toggle a bet when clicking a box
     function toggleBet(choice, displayLabel, element) {
         const amount = Number(betAmountInput.value) || 0;
