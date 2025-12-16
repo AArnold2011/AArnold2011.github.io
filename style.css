@@ -1,14 +1,26 @@
 html{
-  --text: #ebe9fc;
+  --text: #f5f4ff;
   --background: #010104;
   --primary: #353535;
-  --secondary: #fc8e40;
+  --secondary: #ec751f;
   --accent: #120A8F;
 }
 body{
     color: var(--text);
     background: var(--background)
 }
+.primarycontent{
+    background-color: var(--secondary);
+    border: 2px solid var(--text);
+    border-radius: 5px;
+
+}
+.secondarycontent{
+    background-color: var(--accent);
+    border: 2px solid var(--text);
+    border-radius: 5px;
+}
+
 
 .IndexButtonHome{
 background-color: var(--secondary);

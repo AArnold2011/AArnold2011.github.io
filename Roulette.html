@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Roulette</title>
+    <title>Roulette - AArnold2011</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
@@ -36,12 +36,16 @@
                 font-family: Arial, Helvetica, sans-serif;
                 padding: 1px;
                 word-break: break-all;
-                background-color: inherit;
                 cursor: pointer;
+                transition: opacity 0.3s;
             }
                 .roulette-box.selected {
                     outline: 3px solid #cccccc;
                     box-shadow: 0 0 6px rgba(255, 255, 255, 0.4) inset;
+                }
+                .roulette-box.disabled {
+                    opacity: 0.5;
+                    cursor: not-allowed;
                 }
         body {
             text-align: center;
@@ -73,6 +77,58 @@
             max-width: 250px;
             text-align: left;
         }
+        
+        /* Force roulette box colors - override any external CSS */
+        div[class="0"] { background-color: #2ecc71 !important; color: #ffffff !important; }
+        div[class="1"] { background-color: #c0392b !important; color: #ffffff !important; }
+        div[class="2"] { background-color: #2c3e50 !important; color: #ffffff !important; }
+        div[class="3"] { background-color: #c0392b !important; color: #ffffff !important; }
+        div[class="4"] { background-color: #2c3e50 !important; color: #ffffff !important; }
+        div[class="5"] { background-color: #c0392b !important; color: #ffffff !important; }
+        div[class="6"] { background-color: #2c3e50 !important; color: #ffffff !important; }
+        div[class="7"] { background-color: #c0392b !important; color: #ffffff !important; }
+        div[class="8"] { background-color: #2c3e50 !important; color: #ffffff !important; }
+        div[class="9"] { background-color: #c0392b !important; color: #ffffff !important; }
+        div[class="10"] { background-color: #2c3e50 !important; color: #ffffff !important; }
+        div[class="11"] { background-color: #2c3e50 !important; color: #ffffff !important; }
+        div[class="12"] { background-color: #c0392b !important; color: #ffffff !important; }
+        div[class="13"] { background-color: #2c3e50 !important; color: #ffffff !important; }
+        div[class="14"] { background-color: #c0392b !important; color: #ffffff !important; }
+        div[class="15"] { background-color: #2c3e50 !important; color: #ffffff !important; }
+        div[class="16"] { background-color: #c0392b !important; color: #ffffff !important; }
+        div[class="17"] { background-color: #2c3e50 !important; color: #ffffff !important; }
+        div[class="18"] { background-color: #c0392b !important; color: #ffffff !important; }
+        div[class="19"] { background-color: #c0392b !important; color: #ffffff !important; }
+        div[class="20"] { background-color: #2c3e50 !important; color: #ffffff !important; }
+        div[class="21"] { background-color: #c0392b !important; color: #ffffff !important; }
+        div[class="22"] { background-color: #2c3e50 !important; color: #ffffff !important; }
+        div[class="23"] { background-color: #c0392b !important; color: #ffffff !important; }
+        div[class="24"] { background-color: #2c3e50 !important; color: #ffffff !important; }
+        div[class="25"] { background-color: #c0392b !important; color: #ffffff !important; }
+        div[class="26"] { background-color: #2c3e50 !important; color: #ffffff !important; }
+        div[class="27"] { background-color: #c0392b !important; color: #ffffff !important; }
+        div[class="28"] { background-color: #2c3e50 !important; color: #ffffff !important; }
+        div[class="29"] { background-color: #2c3e50 !important; color: #ffffff !important; }
+        div[class="30"] { background-color: #c0392b !important; color: #ffffff !important; }
+        div[class="31"] { background-color: #2c3e50 !important; color: #ffffff !important; }
+        div[class="32"] { background-color: #c0392b !important; color: #ffffff !important; }
+        div[class="33"] { background-color: #2c3e50 !important; color: #ffffff !important; }
+        div[class="34"] { background-color: #c0392b !important; color: #ffffff !important; }
+        div[class="35"] { background-color: #2c3e50 !important; color: #ffffff !important; }
+        div[class="36"] { background-color: #c0392b !important; color: #ffffff !important; }
+        
+        div.Red { background-color: #c0392b !important; color: #ffffff !important; }
+        div.Black { background-color: #2c3e50 !important; color: #ffffff !important; }
+        div.Even { background-color: #27ae60 !important; color: #ffffff !important; }
+        div.Odd { background-color: #e67e22 !important; color: #ffffff !important; }
+        div.Low { background-color: #9b59b6 !important; color: #ffffff !important; }
+        div.High { background-color: #f1c40f !important; color: #ffffff !important; }
+        div.first { background-color: #1abc9c !important; color: #ffffff !important; }
+        div.second { background-color: #3498db !important; color: #ffffff !important; }
+        div.third { background-color: #e74c3c !important; color: #ffffff !important; }
+        div.columnone { background-color: #95a5a6 !important; color: #ffffff !important; }
+        div.columntwo { background-color: #7f8c8d !important; color: #ffffff !important; }
+        div.columnthree { background-color: #bdc3c7 !important; color: #ffffff !important; }
         </style> 
 
 </head>
@@ -89,14 +145,14 @@
         
             <p id="betMessage"></p>
             <div id="activeBets"></div>
-            <button onclick="clearAllBets()" style="margin-top: 10px; font-size: 11px;">Clear All Bets</button>
+            <button id="clearBetsBtn" onclick="clearAllBets()" style="margin-top: 10px; font-size: 11px;">Clear All Bets</button>
         </div>
         <div id="spinnerContainer">
             <Div class="spinner" id="spinner">
                 <img src="Images/363802D7-E46A-4E5E-9B11-C96A1D1F40E1_4_5005_c-removebg-preview.png" alt="roulette wheel">
             </Div>
             <div style="margin-top: 15px;">
-                <button onclick="startSpin()"> 
+                <button id="spinBtn" onclick="startSpin()"> 
                     Spin 
                 </button> 
             </div>
@@ -188,11 +244,15 @@
     </div>
     
     <script type="text/javascript"> 
-         const spinner = document.getElementById('spinner');
+    // helper: red numbers on a standard wheel - DEFINED FIRST
+    const redNumbers = new Set([1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36]);
+    
+    const spinner = document.getElementById('spinner');
     let rotation = 0;
     let startTime = null;
     let animationId = null;
     let rndspdmod = 1;
+    let isSpinning = false;
 
     function startSpin() {
         // Validate that there are bets
@@ -208,6 +268,10 @@
             betMessage.textContent = 'Not enough points for all bets';
             return;
         }
+        
+        // Disable betting during spin
+        isSpinning = true;
+        disableBetting();
         
         // Deduct points now
         playerPoints -= totalAmount;
@@ -227,6 +291,9 @@
         if (lifetime > 4.67) {
             animationId = null;
             displayWheelResult();
+            // Re-enable betting after spin completes
+            isSpinning = false;
+            enableBetting();
             return;
         }
 
@@ -291,7 +358,35 @@
         }
     }
 
+    function disableBetting() {
+        // Disable all roulette boxes
+        const allBoxes = document.querySelectorAll('.roulette-box');
+        allBoxes.forEach(box => {
+            box.classList.add('disabled');
+        });
+        
+        // Disable bet amount input and clear bets button
+        betAmountInput.disabled = true;
+        document.getElementById('clearBetsBtn').disabled = true;
+        document.getElementById('spinBtn').disabled = true;
+    }
+
+    function enableBetting() {
+        // Enable all roulette boxes
+        const allBoxes = document.querySelectorAll('.roulette-box');
+        allBoxes.forEach(box => {
+            box.classList.remove('disabled');
+        });
+        
+        // Enable bet amount input and clear bets button
+        betAmountInput.disabled = false;
+        document.getElementById('clearBetsBtn').disabled = false;
+        document.getElementById('spinBtn').disabled = false;
+    }
+
     function clearAllBets() {
+        if (isSpinning) return;
+        
         // Remove selected class from all boxes
         activeBets.forEach(bet => {
             if (bet.element) {
@@ -321,6 +416,11 @@
 
     // Toggle a bet when clicking a box
     function toggleBet(choice, displayLabel, element) {
+        if (isSpinning) {
+            betMessage.textContent = 'Cannot change bets while spinning';
+            return;
+        }
+        
         const amount = Number(betAmountInput.value) || 0;
         if (!choice) { betMessage.textContent = 'No choice selected'; return; }
         if (!Number.isFinite(amount) || amount <= 0) { betMessage.textContent = 'Enter a valid bet amount'; return; }
@@ -434,13 +534,27 @@
     updateTotalBet();
     updateActiveBetsList();
 
-    const allDivs = document.querySelectorAll('div[class="0"], div[class="1"], div[class="2"], div[class="3"], div[class="4"], div[class="5"], div[class="6"], div[class="7"], div[class="8"], div[class="9"], div[class="10"], div[class="11"], div[class="12"], div[class="13"], div[class="14"], div[class="15"], div[class="16"], div[class="17"], div[class="18"], div[class="19"], div[class="20"], div[class="21"], div[class="22"], div[class="23"], div[class="24"], div[class="25"], div[class="26"], div[class="27"], div[class="28"], div[class="29"], div[class="30"], div[class="31"], div[class="32"], div[class="33"], div[class="34"], div[class="35"], div[class="36"], div.Red, div.Black, div.Even, div.Odd, div.Low, div.High, div.first, div.second, div.third, div.columnone, div.columntwo, div.columnthree');
-    allDivs.forEach(div => {
+    // Wait for DOM to be ready and apply colors
+    document.addEventListener('DOMContentLoaded', function() {
+        applyColors();
+    });
+    
+    // Also call immediately in case DOM is already loaded
+    if (document.readyState === 'loading') {
+        // DOM not ready yet
+    } else {
+        // DOM is ready
+        applyColors();
+    }
+    
+    function applyColors() {
+        const allDivs = document.querySelectorAll('div[class="0"], div[class="1"], div[class="2"], div[class="3"], div[class="4"], div[class="5"], div[class="6"], div[class="7"], div[class="8"], div[class="9"], div[class="10"], div[class="11"], div[class="12"], div[class="13"], div[class="14"], div[class="15"], div[class="16"], div[class="17"], div[class="18"], div[class="19"], div[class="20"], div[class="21"], div[class="22"], div[class="23"], div[class="24"], div[class="25"], div[class="26"], div[class="27"], div[class="28"], div[class="29"], div[class="30"], div[class="31"], div[class="32"], div[class="33"], div[class="34"], div[class="35"], div[class="36"], div.Red, div.Black, div.Even, div.Odd, div.Low, div.High, div.first, div.second, div.third, div.columnone, div.columntwo, div.columnthree');
+        
+        allDivs.forEach(div => {
             
             div.classList.add('roulette-box');
 
-            // assign a distinct color: numbered divs get an HSL hue based on their number;
-            // special named classes get fixed, meaningful colors
+            // Standard roulette table colors
             const specialColors = {
                 Red: '#c0392b',
                 Black: '#2c3e50',
@@ -459,18 +573,33 @@
             const cls = div.className || '';
             if (/^\d+$/.test(cls)) {
                 const n = parseInt(cls, 10);
-                // use a golden-angle-like distribution for hues so colors differ
-                const hue = (n * 137.508) % 360;
-                div.style.backgroundColor = `hsl(${hue} 65% 55%)`;
+                // Standard roulette colors: 0 is green, red numbers are red, black numbers are black
+                if (n === 0) {
+                    div.style.setProperty('background-color', '#2ecc71', 'important'); // green for 0
+                    div.style.setProperty('color', '#ffffff', 'important');
+                } else if (redNumbers.has(n)) {
+                    div.style.setProperty('background-color', '#c0392b', 'important'); // red
+                    div.style.setProperty('color', '#ffffff', 'important');
+                } else {
+                    div.style.setProperty('background-color', '#2c3e50', 'important'); // black
+                    div.style.setProperty('color', '#ffffff', 'important');
+                }
             } else if (specialColors[cls]) {
-                div.style.backgroundColor = specialColors[cls];
+                div.style.setProperty('background-color', specialColors[cls], 'important');
+                div.style.setProperty('color', '#ffffff', 'important');
             }
 
             // handle click to toggle bet
             div.addEventListener('click', function() {
+                // Check if betting is disabled
+                if (isSpinning || this.classList.contains('disabled')) {
+                    betMessage.textContent = 'Cannot change bets while spinning';
+                    return;
+                }
+                
                 // build a candidate list from classList, ignoring helper classes
                 const rawClasses = Array.from(this.classList || []);
-                const filtered = rawClasses.filter(c => c !== 'roulette-box' && c !== 'selected');
+                const filtered = rawClasses.filter(c => c !== 'roulette-box' && c !== 'selected' && c !== 'disabled');
 
                 // find a canonical class: prefer numeric slot, then known keys
                 let canonical = '';
@@ -507,7 +636,8 @@
                 // Toggle the bet
                 toggleBet(choice, displayLabel, this);
             });
-    });
+        });
+    }
 
     
     </script> 
